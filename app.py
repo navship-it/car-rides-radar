@@ -38,7 +38,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("# 🚖 Careem Rides Product: AI Risk Radar & Orchestrator")
+st.markdown("# Project: AI Risk Radar & Orchestrator")
 st.markdown("### Production Engine Pipeline Connected to Native Apache Database Fields")
 st.write("---")
 
