@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Page Config (Must be at the top)
+# 1. Page Config (Must be at the very top)
 st.set_page_config(page_title="Careem Rides AI Risk Radar", layout="wide", page_icon="🚖")
 
 # 2. Custom CSS for a Clean, Corporate Light Theme
@@ -51,9 +51,7 @@ st.markdown("This AI-augmented workflow ingests raw, cross-functional engineerin
 st.write("---")
 
 # 4. Default Operational Data Log
-default_notes = """- [Squad Alpha] Checkout API changes lag... Gateway down until next Friday. Impacts automated testing.
-- [Data Team] 140ms latency spike... Breaches 100ms 99th percentile SLA. Affects Dubai rollout.
-- [Ops/Commercial] marketing push notifications... Monday morning launch. Can't delay deployment."""
+default_notes = "[Squad Alpha] Checkout API changes lag... Gateway down until next Friday. Impacts automated testing.\\n[Data Team] 140ms latency spike... Breaches 100ms 99th percentile SLA. Affects Dubai rollout.\\n[Ops/Commercial] marketing push notifications... Monday morning launch. Can't delay deployment."
 
 # 5. Column Layout
 col_input, col_dashboard = st.columns([1, 1.3])
@@ -80,21 +78,96 @@ is_project_healthy = "complete" in raw_input.lower() or "excellent" in raw_input
 # Column Right: SYNTHESIZED DASHBOARD
 # ==========================================
 with col_dashboard:
-    if raw_input:
-        st.markdown("## 📊 AI-Synthesized Program Dashboard")
+    st.markdown("## 📊 AI-Synthesized Program Dashboard")
+    
+    if is_project_healthy:
+        # 🟢 GREEN STATUS
+        st.markdown('<div class="status-banner-green">🟢 Overall Program Status: GREEN (On Track / Ready for Launch)</div>', unsafe_allow_html=True)
         
-        if is_project_healthy:
-            # 🟢 GREEN STATUS
-            st.markdown('<div class="status-banner-green">🟢 Overall Program Status: GREEN (On Track / Ready for Launch)</div>', unsafe_allow_html=True)
-            
-            st.markdown("### Executive TL;DR")
-            st.markdown("""
-            * **[Squad Alpha]** Integration complete. Third-party payment gateway whitelisting successful; all core regression suites passed.
-            * **[Data Team]** Performance testing looks stellar. Metrics are safely tracking below the baseline SLA limits.
-            * **[Ops/Commercial]** Marketing loops are fully aligned with the technical rollout windows.
-            """)
-            
-            st.markdown("### 🎯 Core Risk Matrices")
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Third-Party Blockers", "0 Active", delta="Clear", delta_color="normal")
-            m2.metric("Peak Latency Variance", f"-15ms", delta="Under SLA Limit", delta_color="normal")
+        st.markdown("### Executive TL;DR")
+        st.markdown("""
+        * **[Squad Alpha]** Integration complete. Third-party payment gateway whitelisting successful; all core regression suites passed.
+        * **[Data Team]** Performance testing looks stellar. Metrics are safely tracking below the baseline SLA limits.
+        * **[Ops/Commercial]** Marketing loops are fully aligned with the technical rollout windows.
+        """)
+        
+        st.markdown("### 🎯 Core Risk Matrices")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Third-Party Blockers", "0 Active", delta="Clear", delta_color="normal")
+        m2.metric("Peak Latency Variance", f"-15ms", delta="Under SLA Limit", delta_color="normal")
+        m3.metric("Go-Live Buffer", "Optimal", delta="Aligned", delta_color="normal")
+        
+        action_data = {
+            "Task / Mitigation Strategy": [
+                "Execute standard blue-green production deployment pipeline steps.",
+                "Monitor live production dashboards during the staggered traffic ramp-up.",
+                "Send out final launch communication and sign-off report to leadership."
+            ],
+            "Owner": ["DevOps Lead", "Data / Performance Eng", "Product Owner"],
+            "Priority": ["Low", "Medium", "Low"],
+            "Target Deadline": ["Tonight 11 PM", "Tomorrow Live", "Post-Launch"]
+        }
+    else:
+        # 🔴 RED STATUS
+        st.markdown('<div class="status-banner-red">🔴 Overall Program Status: RED (Critical Rollout & SLA Blockers)</div>', unsafe_allow_html=True)
+        
+        st.markdown("### Executive TL;DR")
+        st.markdown("""
+        * **[Squad Alpha]** 3rd-party sandbox delay stalls automated checkout testing until next Friday. Directly threatens hard Sunday night deployment deadline.
+        * **[Data Team]** Unmitigated 140ms peak latency spike threatens the 100ms SLA limit if rolled out fully to Dubai. Immediate profiling required.
+        * **[Ops/Commercial]** Monday morning marketing campaign launch leaves zero buffer. Rollout must complete Sunday night.
+        """)
+        
+        st.markdown("### 🎯 Core Risk Matrices")
+        m1, m2, m3 = st.columns(3)
+        latency_variance = 140 - target_sla
+        m1.metric("Third-Party Blockers", "1 Active", delta="Critical Risk", delta_color="inverse")
+        m2.metric("Peak Latency Variance", f"+{latency_variance}ms", delta="SLA Breach Risk", delta_color="inverse")
+        m3.metric("Go-Live Buffer", "0 Days", delta="Campaign Locked", delta_color="inverse")
+        
+        action_data = {
+            "Task / Mitigation Strategy": [
+                "Deploy mock gateway endpoints to bypass 3rd party sandbox lag and unblock regression testing.",
+                "Profile the 140ms latency spike and establish a partial rollout gate (5% tier deployment).",
+                "Align with Ops/Dhanya on a tier-3 contingency plan for marketing spend if gates fail."
+            ],
+            "Owner": ["Squad Alpha Lead", "Data / Performance Eng", "Product Owner / Ops"],
+            "Priority": ["High", "High", "Medium"],
+            "Target Deadline": ["Tonight", "Tomorrow 12 PM", "Tomorrow Morning"]
+        }
+        
+    # Interactive Action Registry Display
+    st.markdown("### 🏁 Interactive Action Registry & Task Assignments")
+    st.caption("Review and adjust AI-suggested mitigation steps below before pushing to systems of record:")
+    df = pd.DataFrame(action_data)
+    edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+    
+    # Downstream Systems Export Utility
+    st.markdown("### 📤 Downstream Systems Export")
+    
+    # Format the live data into clean markdown output
+    status_label = "🟢 GREEN" if is_project_healthy else "🔴 RED"
+    markdown_output = f"""### 🚖 Rides Program Status Update
+**Status:** {status_label} 
+**SLA Baseline:** {target_sla}ms (Currently tracking at {"85" if is_project_healthy else "140"}ms)
+
+#### ⚠️ Critical Dependencies & Risks:
+"""
+    if is_project_healthy:
+        markdown_output += "1. All core third-party architectural parameters operating cleanly.\n"
+    else:
+        markdown_output += f"1. External payment gateway sandbox down until next Friday.\n2. Peak latency spike (+{latency_variance}ms over target threshold) requires architecture profiling.\n"
+        
+    markdown_output += "\n#### 📋 Action Items:\n"
+    for index, row in edited_df.iterrows():
+        markdown_output += f"- [{row['Priority']}] **{row['Owner']}**: {row['Task / Mitigation Strategy']} (*Due: {row['Target Deadline']}*)\n"
+        
+    st.download_button(
+        label="Download Clean Markdown for Jira / Slack",
+        data=markdown_output,
+        file_name="careem_program_status.md",
+        mime="text/markdown"
+    )
+    
+    with st.expander("👁️ Preview Copy-Paste Markdown Text"):
+        st.code(markdown_output, language="markdown")
