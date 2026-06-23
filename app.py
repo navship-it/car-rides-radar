@@ -1,122 +1,182 @@
 import streamlit as st
 import pandas as pd
 
-# Setting the Page Config
-st.set_page_config(page_title="Careem Rides AI Risk Radar", layout="wide", page_icon="🚖")
+# 1. Page Config (Must be at the top)
+st.set_index = False
+st.set_page_config(page_title="Careem Rides: VP Program Radar", layout="wide", page_icon="🚖")
 
-# 1. Custom CSS for Modern SaaS Styling
+# 2. Custom CSS to enforce a clean, light VP Dashboard look (No ugly boxes or black backgrounds)
 st.markdown("""
 <style>
-html, body, [data-testid="stAppViewContainer"] {
-    background-color: #1a1e26;
-    color: #e0e6ed;
-    font-family: 'Inter', sans-serif;
+/* Clean corporate background and typography */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+    background-color: #f4f6f8 !important;
+    color: #1e293b !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
-    background-color: #232a35;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #343d4c;
+
+/* Header Banner Card styling */
+.header-card {
+    background-color: #ffffff;
+    padding: 1.2rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
     margin-bottom: 1.5rem;
 }
-.status-banner-red {
-    background-color: #d9534f; color: white; padding: 1rem; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 1rem;
+.header-card h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
 }
-.status-banner-green {
-    background-color: #2ecc71; color: white; padding: 1rem; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 1rem;
+
+/* Base style for columns / containers to bypass dark Streamlit nesting */
+[data-testid="stColumn"] {
+    background-color: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+    border: 1px solid #e2e8f0 !important;
 }
-[data-testid="stTextArea"] textarea {
-    background-color: #2a3441 !important; color: #e0e6ed !important; border: 1px solid #4a5a71 !important;
+
+/* VP Matrix Pillars styling */
+.pillar {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+}
+.pillar-red { background-color: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.pillar-amber { background-color: #fffbeb; border-color: #fef3c7; color: #92400e; }
+.pillar-green { background-color: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+
+.pillar-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Action Items List */
+.action-box {
+    background-color: #f8fafc;
+    border-left: 4px solid #3b82f6;
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1rem;
+    border-top: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# 3. Top Header App Title Banner
 st.markdown("""
-# 🚖 Careem Rides Product: AI Risk Radar & Orchestrator
----
+<div class="header-card">
+    <h1>🚖 Careem Rides Product: VP Program Radar</h1>
+</div>
 """, unsafe_allow_html=True)
 
-# Default "Messy" Operational Data
+# 4. Input Configuration Setup
 default_notes = """- [Squad Alpha] Checkout API changes lag... Gateway down until next Friday. Impacts automated testing.
 - [Data Team] 140ms latency spike... Breaches 100ms 99th percentile SLA. Affects Dubai rollout.
 - [Ops/Commercial] marketing push notifications... Monday morning launch. Can't delay deployment."""
 
-col_input, col_dashboard = st.columns([1, 1.2])
+# 5. Core View Columns
+col_input, col_matrix, col_actions = st.columns([1, 1.2, 1.2])
 
+# --- Column 1: Input Raw Log Panel ---
 with col_input:
-    st.markdown("### 📥 Input Raw Project Logs")
-    raw_input = st.text_area("Operational Update Log", value=default_notes, height=280, label_visibility="collapsed")
+    st.markdown("### Input Raw Project Logs")
+    raw_input = st.text_area(
+        "Paste unorganized engineering sync/Slack dumps below:", 
+        value=default_notes, 
+        height=320, 
+        label_visibility="collapsed"
+    )
+    st.caption("💡 App dynamically parses changes to track health registers instantly.")
+
+# Logic processing based on keywords
+is_healthy = "complete" in raw_input.lower() or "excellent" in raw_input.lower()
+
+# --- Column 2: Synthesized Risk Matrix Panel ---
+with col_matrix:
+    st.markdown("### 🛡️ Synthesized Risk Matrix (VP-Level)")
     
-    st.markdown("### ⚙️ Engine Constraints")
-    target_sla = st.slider("Target 99th Percentile SLA (ms)", min_value=0, max_value=500, value=100)
+    if not is_healthy:
+        # RED STATE PILLARS
+        st.markdown("""
+        <div class="pillar pillar-red">
+            <div class="pillar-title">🔴 External Dependencies (High Risk)</div>
+            <strong>Gateway Down:</strong> Checkout API adjustments are delayed. Third-party environment offline until next Friday.<br><br>
+            <strong>Direct Impact:</strong> Stalls critical automated regression testing blocks.
+        </div>
+        <div class="pillar pillar-amber">
+            <div class="pillar-title">🔶 Service Level Agreements (Moderate Risk)</div>
+            <strong>Latency Trace:</strong> Peak loads tracing at 140ms vs a 100ms target threshold.<br><br>
+            <strong>Impact:</strong> Risking regional SLA compliance breaches upon wide production release.
+        </div>
+        <div class="pillar pillar-amber">
+            <div class="pillar-title">🔶 Timeline Deadlines (Moderate Risk)</div>
+            <strong>Campaign Target:</strong> High-impact marketing notifications scheduled for Monday morning launch.<br><br>
+            <strong>Buffer:</strong> Zero contingency flexibility for weekend delivery adjustments.
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # GREEN STATE PILLARS
+        st.markdown("""
+        <div class="pillar pillar-green">
+            <div class="pillar-title">🟢 External Dependencies (Nominal)</div>
+            <strong>Gateway Status:</strong> Partner integrations complete and production whitelist confirmed.<br><br>
+            <strong>Verification:</strong> Core functional test passes successfully logged.
+        </div>
+        <div class="pillar pillar-green">
+            <div class="pillar-title">🟢 Service Level Agreements (Nominal)</div>
+            <strong>Performance Trace:</strong> Peak telemetry measuring smoothly at 85ms (well within 100ms parameters).
+        </div>
+        <div class="pillar pillar-green">
+            <div class="pillar-title">🟢 Timeline Deadlines (Nominal)</div>
+            <strong>Launch Integrity:</strong> Technical milestones completely locked for Monday's scheduled campaign window.
+        </div>
+        """, unsafe_allow_html=True)
 
-# ==========================================
-# 🧠 SIMPLE NLP SCANNER (Making it Dynamic!)
-# ==========================================
-# Check if the user pasted a successful/good report
-is_project_healthy = "complete" in raw_input.lower() or "excellent" in raw_input.lower()
-
-with col_dashboard:
-    if raw_input:
-        st.markdown("## 📊 Synthesized Dashboard")
+# --- Column 3: Executive Action Plan Panel ---
+with col_actions:
+    st.markdown("### ➔ Executive Action Plan & Impact")
+    
+    if not is_healthy:
+        st.markdown("#### Overall Status: <span style='color:#d9534f;font-weight:bold;'>RED (Critical Blocker)</span>", unsafe_allow_html=True)
+        st.markdown("High-priority, strategic actions for a VP to review:")
         
-        if is_project_healthy:
-            # 🟢 GREEN STATE
-            st.markdown('<div class="status-banner-green">🟢 Overall Program Status: GREEN (On Track / Ready for Launch)</div>', unsafe_allow_html=True)
-            
-            st.markdown("### Executive TL;DR")
-            st.markdown("""
-            *   **[Squad Alpha]** Integration complete. Third-party payment gateway whitelisting successful; all core regression suites passed.
-            *   **[Data Team]** Performance testing looks stellar. Metrics are safely tracking below the baseline SLA limits.
-            *   **[Ops/Commercial]** Marketing loops are fully aligned with the technical rollout windows.
-            """)
-            
-            # Connected Metrics
-            st.markdown("### 🎯 Core Risk Matrices")
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Third-Party Blockers", "0 Active", delta="Clear", delta_color="normal")
-            m2.metric("Peak Latency Variance", "-15ms", delta="Under SLA Limit", delta_color="normal")
-            m3.metric("Go-Live Buffer", "Optimal", delta="Aligned", delta_color="normal")
-            
-            action_data = {
-                "Task / Mitigation Strategy": [
-                    "Execute standard blue-green production deployment pipeline steps.",
-                    "Monitor live production dashboards during the staggered traffic ramp-up.",
-                    "Send out final launch communication and sign-off report to leadership."
-                ],
-                "Owner": ["DevOps Lead", "Data / Performance Eng", "Product Owner"],
-                "Priority": ["Low", "Medium", "Low"],
-                "Target Deadline": ["Tonight 11 PM", "Tomorrow Live", "Post-Launch"]
-            }
-        else:
-            # 🔴 RED STATE (Fallback to original crisis mode)
-            st.markdown('<div class="status-banner-red">🔴 Overall Program Status: RED (Critical Rollout & SLA Blockers)</div>', unsafe_allow_html=True)
-            
-            st.markdown("### Executive TL;DR")
-            st.markdown("""
-            *   **[Squad Alpha]** 3rd-party sandbox delay stalls automated checkout testing until next Friday.
-            *   **[Data Team]** Unmitigated 140ms peak latency spike threatens the 100ms SLA limit.
-            *   **[Ops/Commercial]** Hard Monday morning campaign window leaves zero timeline buffer.
-            """)
-            
-            st.markdown("### 🎯 Core Risk Matrices")
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Third-Party Blockers", "1 Active", delta="Critical Risk", delta_color="inverse")
-            m2.metric("Peak Latency Variance", f"+40ms", delta="SLA Breach", delta_color="inverse")
-            m3.metric("Go-Live Buffer", "0 Days", delta="Campaign Locked", delta_color="inverse")
-            
-            action_data = {
-                "Task / Mitigation Strategy": [
-                    "Deploy mock gateway endpoints to bypass 3rd party sandbox lag and unblock testing.",
-                    "Profile the 140ms latency spike and establish a partial rollout gate.",
-                    "Align with Ops on a tier-3 contingency plan for marketing spend if gates fail."
-                ],
-                "Owner": ["Squad Alpha Lead", "Data / Performance Eng", "Product Owner / Ops"],
-                "Priority": ["High", "High", "Medium"],
-                "Target Deadline": ["Tonight", "Tomorrow 12 PM", "Tomorrow Morning"]
-            }
-            
-        # Display the dynamic table
-        st.markdown("### 🏁 Interactive Action Registry & Task Assignments")
-        df = pd.DataFrame(action_data)
-        edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+        st.markdown("""
+        <div class="action-box">
+            <strong>Action:</strong> Immediate Escalation with Gateway Partner (escalate to partner VP engineering line).<br>
+            <strong>Impact:</strong> Unblocks internal validation automation track.
+        </div>
+        <div class="action-box">
+            <strong>Action:</strong> Performance Profiling & Optimization Review (schedule technical deep-dive slot).<br>
+            <strong>Impact:</strong> Safeguards performance benchmarks for regional deployment tiers.
+        </div>
+        <div class="action-box">
+            <strong>Action:</strong> Commercial Rollout Alignment Strategy Meeting (with Growth / Ops leadership).<br>
+            <strong>Impact:</strong> Establishes contingency fallback safeguards around marketing investments.
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("#### Overall Status: <span style='color:#2ecc71;font-weight:bold;'>GREEN (Ready for Launch)</span>", unsafe_allow_html=True)
+        st.markdown("Standard sign-off tasks currently underway:")
+        
+        st.markdown("""
+        <div class="action-box" style="border-left-color: #2ecc71;">
+            <strong>Action:</strong> Run standard Blue-Green traffic routing procedures.<br>
+            <strong>Impact:</strong> Zero-downtime platform update execution.
+        </div>
+        <div class="action-box" style="border-left-color: #2ecc71;">
+            <strong>Action:</strong> Real-time production telemetry observations.<br>
+            <strong>Impact:</strong> Early warning sign tracing across core API infrastructure components.
+        </div>
+        """, unsafe_allow_html=True)
