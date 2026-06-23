@@ -156,14 +156,38 @@ with col_right:
     }, index=chart_timeline)
     
     st.line_chart(chart_data, color=["#ff4b4b" if sla_breached else "#2ecc71", "#3b82f6"])
+    # --- 📊 VISUAL INDICATOR 2: BUFFER DELIVERY RISK HORIZON (VARIANCE MAP) ---
+    st.markdown("#### ⏳ Cumulative Timeline Buffer Variance Track")
+    st.caption("Tracks how incoming risks chip away at your allocated buffer safety horizon:")
+
+    # Build a sequential step-down data map of the buffer runway
+    variance_stages = ["1. Configured Buffer Runway", "2. Blocker Deductions", "3. SLA Latency Drag", "4. Net Delivery Margin"]
     
-    # --- 📊 VISUAL INDICATOR 2: BUFFER DELIVERY CHART ---
-    st.markdown("#### ⏳ Schedule & Buffer Delivery Risk Horizon")
-    timeline_matrix = pd.DataFrame({
-        "Timeline Variables": ["Configured Target Buffer", "Predicted Delay Slippage", "Net Safety Buffer Horizon"],
-        "Days Span Value": [allocated_buffer, base_delay, max(0, remaining_buffer)]
+    # Calculate the step-by-step erosion blocks
+    stage_1 = allocated_buffer
+    stage_2 = stage_1 - (5 if is_blocked else 0)
+    stage_3 = stage_2 - (int((detected_latency - target_sla) / 10) if sla_breached else 0)
+    stage_4 = remaining_buffer
+
+    variance_trend = [stage_1, stage_2, stage_3, stage_4]
+
+    variance_df = pd.DataFrame({
+        "Buffer Milestone Steps": variance_stages,
+        "Remaining Safety Cushion (Days)": variance_trend
     })
-    st.bar_chart(data=timeline_matrix, x="Timeline Variables", y="Days Span Value", color="#f59e0b" if timeline_failed else "#10b981")
+
+    # Render a clear, descending area projection chart mapping timeline erosion
+    st.area_chart(
+        data=variance_df, 
+        x="Buffer Milestone Steps", 
+        y="Remaining Safety Cushion (Days)", 
+        color="#f87171" if timeline_failed else "#34d399"
+    )
+    
+    if timeline_failed:
+        st.error(f"⚠️ **Timeline Deficit Alert:** Current engineering risk profiles exceed your maximum allowed buffer parameters by **{abs(remaining_buffer)} Days**.")
+    else:
+        st.success(f"✅ **Timeline Runway Secure:** You are preserving a **{remaining_buffer} Day** safety margin ahead of launch.")
 
     # Dynamic Task Assignment Outputs
     if is_system_critical:
