@@ -192,4 +192,19 @@ with col_right:
                 "Trigger automated platform regression deployment staging scripts.",
                 f"Log safe zero-variance metric updates to downstream [{issue_component}] tracking systems."
             ],
-            "Owner Assigned":
+            "Owner Assigned": ["Release Engineering", "Automation Quality QA", "Program Manager"],
+            "System Priority": ["Low", "Low", "Low"]
+        }
+
+    st.markdown("### 🏁 Interactive Action Registry & Task Assignments")
+    df = pd.DataFrame(action_tasks)
+    edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+    
+    # Downstream Systems Export Utility Build
+    st.markdown("### 📤 Downstream Systems Export")
+    status_flag = "🔴 CRITICAL THRESHOLD BREACH" if is_system_critical else "🟢 METRICS NOMINAL READY"
+    markdown_output = f"### 🚖 Careem Rides Platform Program Health Metrics Update\n**Record Handled:** {selected_key}\n**Current Status:** {status_flag}\n\n#### 📋 Automated System Actions:\n"
+    for idx, row in edited_df.iterrows():
+        markdown_output += f"- **[{row['System Priority']}]** *{row['Owner Assigned']}*: {row['Task / Mitigation Strategy']}\n"
+        
+    st.download_button("Download System Markdown for Jira / Confluence", data=markdown_output, file_name="careem_radar.md", mime="text/markdown")
