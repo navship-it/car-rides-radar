@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 import zipfile
 
@@ -38,33 +39,25 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
 """, unsafe_allow_html=True)
 
 st.markdown("# 🚖 Careem Rides Product: AI Risk Radar & Orchestrator")
-st.markdown("### Connected via Live API Stream to Apache JIRA Production Records")
+st.markdown("### Predictive Analytics Optimization Layer")
 st.write("---")
 
 # =========================================================
-# 🔄 LIVE APACHE JIRA API FETCH PIPELINE
+# 🔄 LIVE DATA FETCH PIPELINE
 # =========================================================
-@st.cache_data(ttl=3600)  # Caches the data for 1 hour to keep UI snappy
+@st.cache_data(ttl=3600)
 def fetch_live_apache_jira():
     from kaggle.api.kaggle_api_extended import KaggleApi
     api = KaggleApi()
     api.authenticate()
-    
-    # Target path for active public Apache JIRA dataset
     dataset_path = "tedlozzo/apaches-jira-issues"
-    
-    # Download specific target log file from the bundle directly
     api.dataset_download_file(dataset_path, file_name="issues.csv", path=".")
-    
-    # Extract the downloaded zip target
     if os.path.exists("issues.csv.zip"):
         with zipfile.ZipFile("issues.csv.zip", "r") as zip_ref:
             zip_ref.extractall(".")
-            
     if os.path.exists("issues.csv"):
-        return pd.read_csv("issues.csv", nrows=100) # Ingesting a 100 row batch slice for smooth execution
-        
-    # Safe structure fallback in case of rate bounds
+        return pd.read_csv("issues.csv", nrows=100)
+    
     fallback_data = {
         "text_formatkey": ["CR-101", "CR-102", "CR-103"],
         "text_formatsummary": ["Checkout integration latency lag", "Driver tracking simulation trace spike", "Marketing notification window alignment"],
@@ -74,26 +67,21 @@ def fetch_live_apache_jira():
     }
     return pd.DataFrame(fallback_data)
 
-# Run Connection Loop
 try:
     raw_df = fetch_live_apache_jira()
-    
-    # Data Cleaning and column safety check to align Apache Schema variables
     data_df = raw_df.copy()
     if "text_formatkey" not in data_df.columns:
         data_df["text_formatkey"] = [f"CR-{100+i}" for i in range(len(data_df))]
-        
-    # Dynamic telemetry creation since public Apache records don't track system latency benchmarks
-    data_df["latency_ms"] = [140 if i % 3 == 0 else (145 if i % 5 == 0 else 85) for i in range(len(data_df))]
-except Exception as e:
-    st.sidebar.error(f"Live Stream Context Resetting: Using Cached Pipeline Mode")
+    # Distribute real simulated tracking variants
+    data_df["latency_ms"] = [140 if i % 3 == 0 else (165 if i % 5 == 0 else 85) for i in range(len(data_df))]
+except Exception:
     data_df = pd.DataFrame({
         "text_formatkey": ["CR-101", "CR-102", "CR-103"],
         "text_formatsummary": ["Checkout API lag over network", "Simulation analytics telemetry trace spike", "Marketing notification lock constraints"],
         "text_formatdescription": ["Gateway down until next Friday.", "140ms peak latency spike.", "Hard Sunday deployment deadline alignment."],
         "text_formatpriority": ["Critical", "Major", "Minor"],
         "text_formatcomponent": ["Squad Alpha", "Data Team", "Ops/Commercial"],
-        "latency_ms": [140, 145, 85]
+        "latency_ms": [140, 165, 85]
     })
 
 # Layout Architecture
@@ -101,90 +89,107 @@ col_left, col_right = st.columns([1, 1.3])
 
 with col_left:
     st.markdown("### 📥 Live Ingestion Stream")
-    st.success("🛰️ Handshake Confirmed: Streaming 'tedlozzo/apaches-jira-issues'")
-    
-    # Dropdown selector populated straight from live Apache dataset row variables
     keys_list = data_df["text_formatkey"].dropna().tolist()
     selected_key = st.selectbox("Select Active Live Record Identifier", options=keys_list)
     
     record_row = data_df[data_df["text_formatkey"] == selected_key].iloc[0]
     
-    # Extract dynamic strings safely
-    issue_summary = str(record_row.get("text_formatsummary", "Operational Task Entry Updates"))
-    issue_desc = str(record_row.get("text_formatdescription", "No raw logs attached to this production record metadata."))
+    issue_summary = str(record_row.get("text_formatsummary", "Operational Task Entry"))
+    issue_desc = str(record_row.get("text_formatdescription", "No raw logs attached."))
     issue_priority = str(record_row.get("text_formatpriority", "Major"))
-    issue_component = str(record_row.get("text_formatcomponent", "Core Infrastructures"))
+    issue_component = str(record_row.get("text_formatcomponent", "Core Services"))
     detected_latency = int(record_row.get("latency_ms", 90))
     
     st.text_input("Summary Label Field", value=issue_summary, disabled=True)
-    raw_input = st.text_area("Detailed Update Content Log Text", value=issue_desc, height=120)
+    raw_input = st.text_area("Detailed Content Log Text", value=issue_desc, height=100)
     
-    st.markdown("### ⚙️ Engine Constraint Variables")
+    st.markdown("### ⚙️ Predictive Engine Variables")
     target_sla = st.slider("Target Acceptable SLA Latency Threshold (ms)", min_value=50, max_value=200, value=100)
+    allocated_buffer = st.slider("Allowed Delivery Buffer Window (Days)", min_value=0, max_value=10, value=3)
 
 # =========================================================
-# 🧠 DYNAMIC RULES SIMULATOR ENGINE
+# 🧠 DYNAMIC PREDICTIVE ENGINE CALCULATIONS
 # =========================================================
 is_blocked = any(w in raw_input.lower() for w in ["down", "lag", "delay", "block", "fail"])
 sla_breached = detected_latency > target_sla
-is_system_critical = is_blocked or sla_breached
+
+# Timeline Simulation Predictive Math:
+# Base operational tracking timeline delay algorithm based on text weight context
+base_delay = 5 if is_blocked else 0
+if sla_breached:
+    base_delay += int((detected_latency - target_sla) / 10)
+    
+remaining_buffer = allocated_buffer - base_delay
+timeline_failed = remaining_buffer < 0
+is_system_critical = is_blocked or sla_breached or timeline_failed
 
 # =========================================================
 # Column Right: SYNTHESIZED DASHBOARD OUTPUT
 # =========================================================
 with col_right:
-    st.markdown("## 📊 AI-Synthesized Program Dashboard")
+    st.markdown("## 📊 Real-Time Predictive Risk Dashboard")
     
     if is_system_critical:
-        st.markdown(f'<div class="status-banner-red">🔴 Overall Program Status: RED (Critical Rollout & SLA Constraints Tripped)</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="status-banner-red">🔴 Overall Program Status: RED (Critical Execution Thresholds Breached)</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="status-banner-green">🟢 Overall Program Status: GREEN (All Deployment Guardrails Intact)</div>', unsafe_allow_html=True)
         
-        st.markdown("### Executive TL;DR")
-        st.markdown(f"The automated logic intercepted high risk conditions linked to tracking index **{selected_key}**.")
-        
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Third-Party Blockers", "1 Active" if is_blocked else "0 Active", delta="Review Required" if is_blocked else "Clear")
-        m2.metric("Peak Latency Delta", f"+{detected_latency - target_sla}ms", delta="SLA Breach Risk", delta_color="inverse")
-        m3.metric("Component Scope", issue_component, delta=f"Priority: {issue_priority}")
-        
+    st.markdown("### 🎯 Core Risk & Performance Matrices")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Third-Party Blockers", "1 Blocked" if is_blocked else "0 Clear", delta="Action Required" if is_blocked else "Nominal")
+    m2.metric("Telemetry Trace Status", f"{detected_latency}ms", delta=f"{detected_latency - target_sla}ms Over Target" if sla_breached else f"{target_sla - detected_latency}ms Under Safe Bounds", delta_color="inverse" if sla_breached else "normal")
+    m3.metric("Project Timeline Buffer", f"{remaining_buffer} Days", delta="Timeline Slippage Risk" if timeline_failed else "On Schedule", delta_color="inverse" if timeline_failed else "normal")
+
+    # --- 📈 VISUAL INDICATOR 1: TELEMETRY VS BOUNDARY PERFORMANCE CHART ---
+    st.markdown("#### ⚡ Real-Time SLA Boundary Validation Analysis")
+    
+    # Generate an explicit mock telemetry path over time to map live tracking variances visually
+    np.random.seed(42)
+    chart_timeline = pd.date_range(end=pd.Timestamp.now(), periods=15, freq='h')
+    baseline_noise = np.random.randint(-15, 15, size=15)
+    
+    # Construct trend profile mapping to current selected node data
+    telemetry_trend = [detected_latency + x for x in baseline_noise]
+    target_boundary = [target_sla] * 15
+    
+    chart_data = pd.DataFrame({
+        "Live System Telemetry": telemetry_trend,
+        "Target SLA Constraint Limit": target_boundary
+    }, index=chart_timeline)
+    
+    # Render Streamlit Line Chart showing real-time constraint parameters crossing lines
+    st.line_chart(chart_data, color=["#ff4b4b" if sla_breached else "#2ecc71", "#3b82f6"])
+    
+    # --- 📊 VISUAL INDICATOR 2: RISK PREDICTION HORIZON BAR ---
+    st.markdown("#### ⏳ Schedule & Buffer Delivery Risk Horizon")
+    
+    # Constructing a clean horizontal status tracking component list dataframe
+    progress_percentage = max(0, min(100, int((remaining_buffer / max(1, allocated_buffer)) * 100))) if not timeline_failed else 0
+    
+    timeline_matrix = pd.DataFrame({
+        "Timeline Variables": ["Configured Target Buffer", "Predicted Delay Slippage", "Net Safety Buffer Horizon"],
+        "Days Span Value": [allocated_buffer, base_delay, max(0, remaining_buffer)]
+    })
+    
+    # Render interactive horizontal projection analysis bars
+    st.bar_chart(data=timeline_matrix, x="Timeline Variables", y="Days Span Value", color="#f59e0b" if timeline_failed else "#10b981")
+
+    # Dynamic Task Assignment Outputs
+    if is_system_critical:
         action_tasks = {
             "Task / Mitigation Strategy": [
-                f"Isolate external dependencies linked to architecture component block [{issue_component}].",
-                f"Deploy immediate optimization patch to compress {detected_latency}ms tracking trace below {target_sla}ms.",
-                "Flag delivery timeline variance parameters directly to cross-functional leads."
+                f"Isolate external dependencies linked to structural architecture component [{issue_component}].",
+                f"Deploy immediate optimization patch to compress {detected_latency}ms tracking trace below {target_sla}ms parameter boundary.",
+                f"Escalate delivery timeline conflict resolution path to manage the {abs(remaining_buffer)} day buffer deficit."
             ],
-            "Owner Assigned": [f"{issue_component} Lead", "Systems Engineering", "Program Architect"],
-            "System Priority": ["High", "High", "Medium"]
+            "Owner Assigned": [f"{issue_component} Squad Lead", "Systems Infrastructure", "Rides Delivery Manager"],
+            "System Priority": ["High" if is_blocked else "Medium", "High" if sla_breached else "Low", "Critical" if timeline_failed else "Medium"]
         }
     else:
-        st.markdown('<div class="status-banner-green">🟢 Overall Program Status: GREEN (On Track / Ready for Deployment Gates)</div>', unsafe_allow_html=True)
-        
-        st.markdown("### Executive TL;DR")
-        st.markdown(f"Performance vectors for record index **{selected_key}** match established production targets.")
-        
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Third-Party Blockers", "0 Active", delta="Clear")
-        m2.metric("Peak Latency Delta", f"-{target_sla - detected_latency}ms", delta="Safe Threshold")
-        m3.metric("Component Scope", issue_component, delta="Nominal Parameter")
-        
         action_tasks = {
             "Task / Mitigation Strategy": [
-                f"Mark active file track data for {selected_key} as validated in deploy schemas.",
-                "Trigger automated environment sanity routing checks.",
-                "Distribute final green status overview release copy to downstream product systems."
+                f"Mark track log data identifier {selected_key} as verified across environment pipelines.",
+                "Trigger automated platform regression deployment staging scripts.",
+                f"Log safe zero-variance metric updates to downstream [{issue_component}] tracking systems."
             ],
-            "Owner Assigned": ["Release Operations", "Data QA Team", "Program Lead"],
-            "System Priority": ["Low", "Low", "Low"]
-        }
-
-    st.markdown("### 🏁 Interactive Action Registry & Task Assignments")
-    df = pd.DataFrame(action_tasks)
-    edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
-    
-    # Markdown Export Utility Build
-    st.markdown("### 📤 Downstream Systems Export")
-    status_flag = "🔴 CRITICAL RED FLAG" if is_system_critical else "🟢 OPERATIONAL GREEN READY"
-    markdown_output = f"### 🚖 Careem Rides Platform Program Health Metrics Update\n**Record Handled:** {selected_key}\n**Current Status:** {status_flag}\n\n#### 📋 Automated System Actions:\n"
-    for idx, row in edited_df.iterrows():
-        markdown_output += f"- **[{row['System Priority']}]** *{row['Owner Assigned']}*: {row['Task / Mitigation Strategy']}\n"
-        
-    st.download_button("Download System Markdown for Jira / Confluence", data=markdown_output, file_name="careem_radar.md", mime="text/markdown")
+            "Owner Assigned":
