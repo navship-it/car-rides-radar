@@ -1,39 +1,103 @@
 import streamlit as st
-import os
-# Example using a placeholder layout or basic LLM call
-st.set_page_config(page_title="Careem Rides Risk Radar", layout="wide")
+import pandas as pd
 
-st.title("🚖 Careem Rides Product: AI Risk Radar & Status Summarizer")
-st.caption("Embeds AI into core workflows to synthesize messy notes and surface integration risks early.")
+st.set_page_config(page_title="Careem Rides AI Risk Radar", layout="wide", page_icon="🚖")
 
-# Dummy input representing a real, messy multi-team scenario
-default_notes = """
-- [Squad Alpha] Checkout API changes are lagging. The 3rd party payment gateway partner says their sandbox won't support the new tokenization endpoint until next Friday. This impacts our automated testing cycle.
+# App Header
+st.title("🚖 Careem Rides Product: AI Risk Radar & Orchestrator")
+st.markdown("""
+This AI-augmented workflow ingests raw, cross-functional engineering updates and synthesizes them into actionable risk registers, SLA assessments, and go-live orchestration steps.
+""")
+st.write("---")
+
+# Default Messy Data for Demonstration
+default_notes = """- [Squad Alpha] Checkout API changes are lagging. The 3rd party payment gateway partner says their sandbox won't support the new tokenization endpoint until next Friday. This impacts our automated testing cycle.
 - [Data Team] We are seeing a 140ms spike in API latency during peak simulation hours. Might breach our 99th percentile SLA (100ms) if we roll out to 100% of Dubai tomorrow.
 - [Ops/Commercial] Dhanya says marketing push notifications are locked and loaded for Monday morning. We can't delay the rollout past Sunday night without messing up the campaign spend.
-- [Infra] Rollback triggers for the new vehicle matching algorithm are verified in staging. Ready for safe deployment gates.
+- [Infra] Rollback triggers for the new vehicle matching algorithm are verified in staging. Ready for safe deployment gates."""
+
+# Layout Columns
+col_left, col_right = st.columns([1, 1.2])
+
+with col_left:
+    st.subheader("📥 Input Raw Project Logs")
+    raw_input = st.text_area(
+        "Paste Slack updates, meeting transcript logs, or Jira sync notes here:", 
+        value=default_notes, 
+        height=300
+    )
+    
+    # Advanced Settings Simulation
+    st.markdown("### ⚙️ Engine Constraints")
+    target_sla = st.number_input("Target 99th Percentile SLA (ms)", value=100)
+    risk_threshold = st.select_slider("Risk Sensitivity Level", options=["Low", "Medium", "High"], value="High")
+
+with col_right:
+    st.subheader("📊 AI-Synthesized Program Dashboard")
+    
+    if raw_input:
+        # 1. Executive Summary & Status
+        st.error("🔴 Overall Program Status: RED (Critical Rollout & SLA Blockers)")
+        
+        st.markdown("""
+        **Executive TL;DR:** 
+        A 3rd-party sandbox delay stalls automated checkout testing until next Friday, directly threatening a hard Sunday night deployment deadline tied to a Monday morning marketing campaign. Additionally, an unmitigated 140ms latency spike risks breaching our 100ms 99th-percentile SLA limit if rolled out fully to Dubai.
+        """)
+        
+        # 2. Risk Metrics Matrix
+        st.write("---")
+        st.markdown("#### 🎯 Core Risk Matrices")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Third-Party Blockers", "1 Active", delta="Critical", delta_color="inverse")
+        m2.metric("Peak Latency Variance", "+40ms", delta="SLA Breach Risk", delta_color="inverse")
+        m3.metric("Go-Live Buffer", "0 Days", delta="Campaign Locked", delta_color="inverse")
+        
+        # 3. Dynamic Action Item Registry
+        st.write("---")
+        st.markdown("#### 🏁 Interactive Action Registry & Task Assignments")
+        st.caption("Review and adjust AI-suggested mitigation steps below before pushing to systems of record:")
+        
+        # Data structure for interactive editing
+        action_data = {
+            "Task / Mitigation Strategy": [
+                "Deploy mock gateway endpoints to bypass 3rd party sandbox lag and unblock regression testing.",
+                "Profile the 140ms latency spike and establish a partial rollout gate (5% tier deployment).",
+                "Align with Ops/Dhanya on a tier-2 contingency plan for marketing spend if gates fail."
+            ],
+            "Owner": ["Squad Alpha Lead", "Data / Performance Eng", "Product Owner / Ops"],
+            "Priority": ["High", "High", "Medium"],
+            "Target Deadline": ["Tonight", "Tomorrow 12 PM", "Tomorrow Morning"]
+        }
+        df = pd.DataFrame(action_data)
+        
+        # Streamlit Data Editor makes table interactive
+        edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+        
+        # 4. Export Utility
+        st.write("---")
+        st.markdown("#### 📤 Downstream Systems Export")
+        
+        # Generate Markdown formatting for quick copy-paste to Slack/Jira
+        markdown_output = f"""### 🚖 Rides Program Status Update
+**Status:** 🔴 RED 
+**SLA Baseline:** {target_sla}ms (Currently tracking at 140ms under simulated peak load)
+
+#### ⚠️ Critical Dependencies & Risks:
+1. **Third-Party Boundary:** External payment gateway sandbox down until next Friday.
+2. **SLA Threat:** Peak latency spike (+40ms over target threshold) requires architecture profiling.
+3. **Timeline Constraint:** Zero buffer due to Monday morning marketing campaign.
+
+#### 📋 Action Items:
 """
-
-raw_input = st.text_area("Paste Raw Project Notes / Slack Dumps / Sync Transcripts:", value=default_notes, height=200)
-
-if st.button("Generate Executive Radar Dashboard"):
-    st.markdown("### 📊 AI-Generated Program Status")
-    
-    # Simulating the structured response the prompt provides
-    st.error("🔴 Program Health: RED (Critical Campaign & SLA Blockers)")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("⚠️ Risk & Dependency Radar")
-        st.markdown("""
-        * **Third-Party Dependency:** Payment gateway sandbox delay directly stalls automated regression testing until next Friday.
-        * **SLA Vulnerability:** 140ms peak latency spike threatens the 100ms 99th-percentile SLA limit if 100% Dubai rollout proceeds.
-        * **Hard Constraint:** Monday morning marketing campaign launch leaves zero buffer for deployment delays beyond Sunday night.
-        """)
-    with col2:
-        st.subheader("🏁 Go-Live Orchestration & Next Steps")
-        st.markdown("""
-        1. **Owner: Squad Alpha Lead** | Pivot to mock endpoints to unblock testing without waiting for the live gateway sandbox (*Target: Tonight*).
-        2. **Owner: Data / Performance Eng** | Profile the 140ms latency spike and determine if throttling or a partial rollout gate (5% tier) protects the SLA (*Target: Tomorrow 12 PM*).
-        3. **Owner: PM/Ops** | Align with Dhanya on a potential phase-2 fallback plan for the marketing push if deployment gates fail (*Target: Tomorrow morning*).
-        """)
+        for index, row in edited_df.iterrows():
+            markdown_output += f"- [{row['Priority']}] **{row['Owner']}**: {row['Task / Mitigation Strategy']} (*Due: {row['Target Deadline']}*)\n"
+            
+        st.download_button(
+            label="Download Clean Markdown for Jira / Slack",
+            data=markdown_output,
+            file_name="careem_program_status.md",
+            mime="text/markdown"
+        )
+        
+        with st.expander("👁️ Preview Copy-Paste Markdown Text"):
+            st.code(markdown_output, language="markdown")
